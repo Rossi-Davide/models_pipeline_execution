@@ -1,4 +1,9 @@
-"""Backend implementations wrapped by :class:`pipeline_modelli.Model`."""
+"""Backend implementations wrapped by :class:`pipeline_modelli.Model`.
+
+    To add a new model create a class that inherits from Backend with the model checkpoint
+    and specific loading mechanisms. Register decorator automatically adds it to registry
+
+"""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
