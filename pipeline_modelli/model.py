@@ -21,9 +21,9 @@ class Model:
     >>> m = Model("clip", checkpoint="openai/clip-vit-large-patch14")
     >>> img_emb = m.encode_image(pil_image)     # (N, D)
     >>> txt_emb = m.encode_text(["a cat"])      # CLIP only
-    >>> m.similarity(img_emb, txt_emb)
     """
 
+    #backend is the underlying model used for operations
     def __init__(
         self,
         name: str,
@@ -54,10 +54,6 @@ class Model:
 
     def encode_text(self, texts: TextInput) -> torch.Tensor:
         return self._post(self.backend.encode_text(texts))
-
-    @staticmethod
-    def similarity(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
-        return F.normalize(a, dim=-1) @ F.normalize(b, dim=-1).T
 
     def __repr__(self) -> str:
         return f"Model(name={self.name!r}, checkpoint={self.checkpoint!r}, device={self.device!r})"
