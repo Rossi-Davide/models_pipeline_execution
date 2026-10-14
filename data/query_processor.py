@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .images_dto import ImageClass, ImageRecord, read_images, write_images
 
-IMAGE_RECORDS_PATH = Path(__file__).parent / "files" / "image_records.txt"
+IMAGE_RECORDS_PATH = Path(__file__).parent / "files" / "image_records.csv"
 
 
 def _load() -> list[ImageRecord]:
@@ -38,3 +38,4 @@ def get_instructions_for_build(build_name: str) -> list[ImageRecord]:
 
 def get_query_images_for_build(build_name: str) -> list[ImageRecord]:
     return [r for r in get_images_for_build(build_name) if r.img_class == ImageClass.QUERY_IMAGE]
+
