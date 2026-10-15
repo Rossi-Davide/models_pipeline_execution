@@ -8,6 +8,7 @@ from .images_dto import ImageClass, ImageRecord, read_images, write_images
 import torch
 
 from .embeddings_store import save_embeddings
+from .similarities_store import save_similarities
 
 IMAGE_RECORDS_PATH = Path(__file__).parent / "files" / "image_records.csv"
 
@@ -57,6 +58,14 @@ def store_embedding(
     """Persist the embedding of one image for the given model, linked through image_record.key."""
     vector = embedding.detach().cpu().float().numpy().reshape(1, -1)
     save_embeddings(model, checkpoint, [image_record], vector)
+
+def store_similarities(
+    model: str,
+    metric: str,
+    similarities: dict[ImageRecord, list[tuple[ImageRecord, float]]],
+) -> None:
+    """Persist query-instruction similarity scores computed from the given model's embeddings."""
+    save_similarities(model, metric, similarities)
 
 def load_embeddings_index() -> None:
     return

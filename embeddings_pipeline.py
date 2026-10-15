@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from data.images_dto import ImageClass, ImageRecord
-from data.query_processor import get_images_for_build, get_images_from_dataset, store_embedding, list_builds, get_instructions_for_build, get_query_images_for_build
+from data.query_processor import get_images_for_build, get_images_from_dataset, store_embedding, store_similarities, list_builds, get_instructions_for_build, get_query_images_for_build
 from pipeline_modelli import Model
 from PIL import Image
 from pathlib import Path
@@ -109,6 +109,7 @@ def main() -> None:
 
     indexes = build_instruction_indexes(embedded)
     similarities = compute_similarities(indexes, embedded)
+    store_similarities(model.name, "cosine", similarities)
     print(f"Built {len(indexes)} index(es); computed similarities for {len(similarities)} query images")
 
 
