@@ -5,6 +5,10 @@ from pathlib import Path
 
 from .images_dto import ImageClass, ImageRecord, read_images, write_images
 
+import torch
+
+from .embeddings_store import save_embeddings
+
 IMAGE_RECORDS_PATH = Path(__file__).parent / "files" / "image_records.csv"
 
 
@@ -38,4 +42,18 @@ def get_instructions_for_build(build_name: str) -> list[ImageRecord]:
 
 def get_query_images_for_build(build_name: str) -> list[ImageRecord]:
     return [r for r in get_images_for_build(build_name) if r.img_class == ImageClass.QUERY_IMAGE]
+
+def store_embedding(
+    image_record: ImageRecord,
+    model: str,
+    embedding: torch.Tensor,
+    checkpoint: str | None = None,
+) -> None:
+    """Persist the embedding of one image for the given model, linked through image_record.key."""
+    vector = embedding.detach().cpu().float().numpy().reshape(1, -1)
+    save_embeddings(model, checkpoint, [image_record], vector)
+
+def load_embeddings_index() -> None:
+    return
+
 
