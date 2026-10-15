@@ -36,6 +36,11 @@ def get_images_from_dataset() -> list[ImageRecord]:
     return _load()
 
 
+def list_builds() -> list[str]:
+    """Return the distinct build names in the dataset, in order of first appearance."""
+    return list(dict.fromkeys(r.build_name for r in _load()))
+
+
 def get_instructions_for_build(build_name: str) -> list[ImageRecord]:
     return [r for r in get_images_for_build(build_name) if r.img_class == ImageClass.INSTRUCTION]
 
