@@ -2,3 +2,4 @@ torch
 transformers>=4.56
 pillow
 numpy
+faiss-cpu
