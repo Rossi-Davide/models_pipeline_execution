@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .images_dto import ImageRecord
+from .images_store import ImageRecord
 
 EMBEDDINGS_DIR = Path(__file__).parent / "files"
 

@@ -4,7 +4,7 @@ The unit score of a query-image embedding is whether, among the instruction imag
 similarity (same model, same build), one of the top-k has the same step number as the query.
 """
 
-from data.images_dto import ImageRecord
+from data.images_store import ImageRecord
 from data.query_processor import (
     load_model_embeddings,
     store_benchmarks,

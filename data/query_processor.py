@@ -3,7 +3,7 @@ Utility functions to call and handle write and read operations to disk files
 """
 from pathlib import Path
 
-from .images_dto import ImageClass, ImageRecord, read_images, write_images
+from .images_store import ImageClass, ImageRecord, read_images, write_images
 
 import torch
 

@@ -5,7 +5,7 @@ import faiss
 import numpy as np
 import torch
 
-from data.images_dto import ImageClass, ImageRecord
+from data.images_store import ImageRecord
 
 
 def _to_matrix(embeddings: list[torch.Tensor]) -> np.ndarray:

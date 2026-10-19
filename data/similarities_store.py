@@ -6,7 +6,7 @@ so the same pair of images can hold different scores for different models or met
 import csv
 from pathlib import Path
 
-from .images_dto import ImageRecord
+from .images_store import ImageRecord
 
 SIMILARITIES_DIR = Path(__file__).parent / "files"
 

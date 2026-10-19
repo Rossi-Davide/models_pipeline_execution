@@ -2,7 +2,7 @@ import argparse
 
 import torch
 
-from data.images_dto import ImageRecord, ImageClass
+from data.images_store import ImageRecord, ImageClass
 from data.query_processor import get_images_for_build, get_images_from_dataset, store_embedding, store_similarities
 from pipeline_modelli import Model
 from similarity_index import build_flat_indexes_per_build, compute_cosine_similarities_from_embeddings

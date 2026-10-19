@@ -2,7 +2,7 @@
 import csv
 from pathlib import Path
 
-from .images_dto import ImageRecord
+from .images_store import ImageRecord
 
 BENCHMARKS_DIR = Path(__file__).parent / "files"
 
