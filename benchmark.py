@@ -18,13 +18,13 @@ TOP_K = [1, 3, 5]
 
 def _compute_top_k_accuracies(
     image_record: ImageRecord,
-    image_embedding: np.ndarray,
+    image_embedding: torch.Tensor,
     index: tuple[faiss.Index, list[ImageRecord]],
 ) -> dict[str, float]:
     """Return {k: 1.0 if one of the k nearest instruction images has the query's step number else 0.0}."""
     faiss_index, records = index
     #faiss expects a (1, D) float32 batch; the index holds L2-normalized vectors (cosine)
-    query = F.normalize(torch.from_numpy(image_embedding).float().reshape(1, -1), dim=-1)
+    query = F.normalize(image_embedding.float().reshape(1, -1), dim=-1)
     accuracies: dict[str, float] = {}
     for k in TOP_K:
         _, ids = faiss_index.search(query.numpy(), min(k, faiss_index.ntotal))

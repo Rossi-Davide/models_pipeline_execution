@@ -68,9 +68,9 @@ def store_similarities(
     """Persist query-instruction similarity scores computed from the given model's embeddings."""
     save_similarities(model, metric, similarities)
 
-def load_model_embeddings(model: str, checkpoint: str | None = None):
-    """Load all stored embeddings of a model, keyed by image record key."""
-    return load_embeddings(model, checkpoint)
+def load_model_embeddings(model: str, checkpoint: str | None = None) -> dict:
+    """Load all stored embeddings of a model as torch tensors, keyed by image record key."""
+    return {key: torch.from_numpy(vec) for key, vec in load_embeddings(model, checkpoint).items()}
 
 
 def load_model_similarities(model: str):
