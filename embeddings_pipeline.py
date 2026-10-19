@@ -3,9 +3,10 @@ import argparse
 import torch
 
 from data.images_dto import ImageRecord
-from data.query_processor import get_images_for_build, get_images_from_dataset, store_embedding, store_similarities, list_builds, get_instructions_for_build, get_query_images_for_build
+from data.query_processor import get_images_for_build, get_images_from_dataset, store_embedding, store_similarities
 from pipeline_modelli import Model
 from similarity_index import build_flat_instruction_indexes, compute_cosine_similarities
+from benchmark import compute_accuracy_unit_scores_with_index
 from PIL import Image
 from pathlib import Path
 from typing import Iterable
@@ -45,7 +46,8 @@ def main() -> None:
     similarities = compute_cosine_similarities(indexes, embedded)
     store_similarities(model.name, "cosine", similarities)
     print(f"Built {len(indexes)} index(es); computed similarities for {len(similarities)} query images")
-
+    image_records = [record for record, _ in embedded]
+    compute_accuracy_unit_scores_with_index(model.name, image_records, indexes)
 
 if __name__ == "__main__":
     main()
