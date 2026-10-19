@@ -14,7 +14,7 @@ def _to_matrix(embeddings: list[torch.Tensor]) -> np.ndarray:
     )
 
 
-def build_flat_instruction_indexes(
+def build_flat_indexes_per_build(
     embedded: list[tuple[ImageRecord, torch.Tensor]],
 ) -> dict[str, tuple[faiss.Index, list[ImageRecord]]]:
     """
@@ -26,11 +26,10 @@ def build_flat_instruction_indexes(
     associated image records stored
     The records list is aligned with the index ids: id i -> records[i].
     """
-    #groups records by build_name and filters out non instructions
+    #groups records by build_name
     grouped: dict[str, list[tuple[ImageRecord, torch.Tensor]]] = defaultdict(list)
     for record, emb in embedded:
-        if record.img_class == ImageClass.INSTRUCTION:
-            grouped[record.build_name].append((record, emb))
+        grouped[record.build_name].append((record, emb))
 
 
     indexes = {}
@@ -46,20 +45,20 @@ def build_flat_instruction_indexes(
     return indexes
 
 
-def compute_cosine_similarities(
+def compute_cosine_similarities_from_embeddings(
     instruction_indexes: dict[str, tuple[faiss.Index, list[ImageRecord]]],
     embedded: list[tuple[ImageRecord, torch.Tensor]],
 ) -> dict[ImageRecord, list[tuple[ImageRecord, float]]]:
-    """For each query image, grab the 
+    """For each record, embedding pair, grab the 
     instruction_index of the corresponding build and measure 
     cosine similarity against all instruction images of its build
-    Returns a dictionary {query_image: similarity values} containing a list
+    Returns a dictionary {image_record: similarity values} containing a list
     of similarity values and the corresponding image record
     """
     results = {}
     for record, emb in embedded:
         #filter out non query images
-        if record.img_class != ImageClass.QUERY_IMAGE or record.build_name not in instruction_indexes:
+        if record.build_name not in instruction_indexes:
             continue
         #grab corresponding index
         index, instruction_records = instruction_indexes[record.build_name]

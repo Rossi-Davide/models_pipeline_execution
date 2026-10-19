@@ -2,10 +2,10 @@ import argparse
 
 import torch
 
-from data.images_dto import ImageRecord
+from data.images_dto import ImageRecord, ImageClass
 from data.query_processor import get_images_for_build, get_images_from_dataset, store_embedding, store_similarities
 from pipeline_modelli import Model
-from similarity_index import build_flat_instruction_indexes, compute_cosine_similarities
+from similarity_index import build_flat_indexes_per_build, compute_cosine_similarities_from_embeddings
 from benchmark import compute_accuracy_unit_scores_with_index
 from PIL import Image
 from pathlib import Path
@@ -34,20 +34,24 @@ def compute_embeddings_for_batch(model: Model, records: Iterable[ImageRecord]) -
 def main() -> None:
     args = parse_args()
     model = Model(args.model)
-    image_records = load_image_records(args.build)
-    print(f"Loaded {model} and {len(image_records)} image records")
+    query_records = load_image_records(args.build)
+    print(f"Loaded {model} and {len(query_records)} image records")
 
-    embedded = compute_embeddings_for_batch(model, image_records)
+    embedded = compute_embeddings_for_batch(model, query_records)
     for record, embedding in embedded:
         #TODO: rework checkpoint paramenter
         store_embedding(record, model.name, embedding)
 
-    indexes = build_flat_instruction_indexes(embedded)
-    similarities = compute_cosine_similarities(indexes, embedded)
+    instruction_embeds = [(record, embedding)  for (record, embedding) in embedded if record.img_class == ImageClass.INSTRUCTION]
+    query_embeds = [(record, embedding)  for (record, embedding) in embedded if record.img_class == ImageClass.QUERY_IMAGE]
+    instruction_indexes = build_flat_indexes_per_build(instruction_embeds)
+    #compute cosine similarities of query images against instruction images of the same build
+    similarities = compute_cosine_similarities_from_embeddings(instruction_indexes, query_embeds)
     store_similarities(model.name, "cosine", similarities)
-    print(f"Built {len(indexes)} index(es); computed similarities for {len(similarities)} query images")
-    image_records = [record for record, _ in embedded]
-    compute_accuracy_unit_scores_with_index(model.name, image_records, indexes)
+    print(f"Built {len(instruction_indexes)} index(es); computed similarities for {len(similarities)} query images")
+    query_records = [record for record, _ in query_embeds]
+    #unit scores might vary based on benchmark metric, embeddings and similarity metric
+    compute_accuracy_unit_scores_with_index(model.name, query_records, instruction_indexes)
 
 if __name__ == "__main__":
     main()
