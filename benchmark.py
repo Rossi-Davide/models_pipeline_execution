@@ -4,13 +4,14 @@ The unit score of a query-image embedding is whether, among the instruction imag
 similarity (same model, same build), one of the top-k has the same step number as the query.
 """
 
+import warnings
+
 from data.images_store import ImageRecord
 from data.query_processor import (
     load_model_embeddings,
     store_benchmarks,
 )
 import faiss
-import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -44,12 +45,9 @@ def compute_accuracy_unit_scores_with_index(
     Compute benchmark unit scores for given image records
     Return {query_record: {k: 1.0 if a top-k instruction has the same step else 0.0}}.
 
-    Query images without a stored embedding or without similarities are skipped.
+    Query images without a stored embedding or whose build is not in the index are skipped
     """
-    #records whose embedding wasn't found on disk
     uncomputed_records = []
-
-
     embeddings = load_model_embeddings(model_name)
     scores: dict[ImageRecord, dict[str, float]] = {}
     for image_record in records:
@@ -59,8 +57,14 @@ def compute_accuracy_unit_scores_with_index(
             continue
         index = instruction_indexes.get(image_record.build_name)
         if index is None:
-            raise ValueError(f"No index for {image_record.build_name} was found")
+            uncomputed_records.append(image_record)
+            continue
         accuracy_scores = _compute_top_k_accuracies(image_record,image_embedding, index)
         scores[image_record] = accuracy_scores
     store_benchmarks(model_name,metric,scores)
+    warnings.warn(f"""
+    These records were uncomputed because no embedding 
+    was found or index of corresponding build wasn't found
+    {[record.image_name for record in uncomputed_records]}
+    """)
     return scores
