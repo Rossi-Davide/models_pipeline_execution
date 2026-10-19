@@ -3,11 +3,9 @@
 The unit score of a query-image embedding is whether, among the instruction images ranked by
 similarity (same model, same build), one of the top-k has the same step number as the query.
 """
-from collections import defaultdict
 
-from data.images_dto import ImageClass, ImageRecord
+from data.images_dto import ImageRecord
 from data.query_processor import (
-    get_images_from_dataset,
     load_model_embeddings,
     store_benchmarks,
 )
@@ -66,11 +64,3 @@ def compute_accuracy_unit_scores_with_index(
         scores[image_record] = accuracy_scores
     store_benchmarks(model_name,metric,scores)
     return scores
-
-
-def aggregate(scores: dict[ImageRecord, dict[int, float]]) -> dict[int, float]:
-    """Mean top-k accuracy over all scored query images."""
-    if not scores:
-        return {}
-    ks = next(iter(scores.values())).keys()
-    return {k: sum(s[k] for s in scores.values()) / len(scores) for k in ks}
