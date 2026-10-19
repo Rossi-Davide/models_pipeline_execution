@@ -5,7 +5,7 @@ import torch
 from data.images_dto import ImageRecord
 from data.query_processor import get_images_for_build, get_images_from_dataset, store_embedding, store_similarities, list_builds, get_instructions_for_build, get_query_images_for_build
 from pipeline_modelli import Model
-from similarity_index import build_instruction_indexes, compute_similarities
+from similarity_index import build_flat_instruction_indexes, compute_cosine_similarities
 from PIL import Image
 from pathlib import Path
 from typing import Iterable
@@ -41,8 +41,8 @@ def main() -> None:
         #TODO: rework checkpoint paramenter
         store_embedding(record, model.name, embedding)
 
-    indexes = build_instruction_indexes(embedded)
-    similarities = compute_similarities(indexes, embedded)
+    indexes = build_flat_instruction_indexes(embedded)
+    similarities = compute_cosine_similarities(indexes, embedded)
     store_similarities(model.name, "cosine", similarities)
     print(f"Built {len(indexes)} index(es); computed similarities for {len(similarities)} query images")
 
