@@ -10,8 +10,8 @@ from .images_store import ImageRecord
 
 SIMILARITIES_DIR = Path(__file__).parent / "files"
 
-Key = tuple[str, str, str | None]
-Pair = tuple[str, Key, Key]  # (metric, query key, instruction key)
+ImageRecordKey = tuple[str, str, str | None]
+SimilarityRecordKey = tuple[str, ImageRecordKey, ImageRecordKey]  # (metric, query key, instruction key)
 
 _HEADER = ["metric", "query_folder", "query_image", "query_mod", "instr_folder", "instr_image", "instr_mod", "score"]
 
@@ -20,11 +20,11 @@ def _path(model_name: str) -> Path:
     return SIMILARITIES_DIR / f"similarities_{model_name}.csv"
 
 
-def _row(metric: str, q: Key, i: Key, score: float) -> list[str]:
+def _row(metric: str, q: ImageRecordKey, i: ImageRecordKey, score: float) -> list[str]:
     return [metric, q[0], q[1], q[2] or "", i[0], i[1], i[2] or "", repr(score)]
 
 
-def load_similarities(model_name: str) -> dict[Pair, float]:
+def load_similarities(model_name: str) -> dict[SimilarityRecordKey, float]:
     """Return {(metric, query_key, instruction_key): score} for a model."""
     path = _path(model_name)
     if not path.exists() or path.stat().st_size == 0:
@@ -42,9 +42,11 @@ def save_similarities(
     metric: str,
     similarities: dict[ImageRecord, list[tuple[ImageRecord, float]]],
 ) -> None:
-    """Store {query_record: [(instruction_record, score), ...]}, merging with scores already saved.
+    """Store {query_record: [(instruction_record, score)]}, merging with scores already saved.
         Similarities are stored in a  file similarities_{model_name} 
-        Each row is composed of (metric, query_image.key, other_image.key, similarity_score)    
+        Each row is composed of (metric, query_image.key, other_image.key, similarity_score)  
+        The function assumes that the given similarity scores are calculated from the embeddings computed
+        from the given model name  
     """
     merged = load_similarities(model_name)
     for query, matches in similarities.items():

@@ -1,4 +1,6 @@
-"""Persistence of per-embedding benchmark (top-k) scores, keyed by (model, metric, query ImageRecord.key)."""
+"""Persistence of per-embedding benchmark (top-k) scores, keyed by (model, similarity_metric, query ImageRecord.key, benchmark_metric).
+    Benchmark scores coming from embeddings of the same model are kept in the same file
+"""
 import csv
 from pathlib import Path
 

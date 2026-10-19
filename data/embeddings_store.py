@@ -1,4 +1,6 @@
-"""Persistence of embeddings, linked to images through ImageRecord.key (not row order)."""
+"""Persistence of embeddings, linked to images through ImageRecord.key (not row order).
+    Module stores a .npz file per model with {ImageRecord.key: embedding}
+"""
 from pathlib import Path
 
 import numpy as np
