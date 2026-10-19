@@ -7,7 +7,7 @@ from .images_dto import ImageRecord
 
 EMBEDDINGS_DIR = Path(__file__).parent / "files"
 
-Key = tuple[str, str, str | None]
+ImageRecordKey = tuple[str, str, str | None]
 
 
 def _path(model_name: str) -> Path:
@@ -37,7 +37,7 @@ def save_embeddings(
     )
 
 
-def _read(model_name: str, checkpoint: str | None) -> tuple[str, dict[Key, np.ndarray]]:
+def _read(model_name: str, checkpoint: str | None) -> tuple[str, dict[ImageRecordKey, np.ndarray]]:
     path = _path(model_name)
     if not path.exists():
         return "", {}
@@ -51,7 +51,7 @@ def _read(model_name: str, checkpoint: str | None) -> tuple[str, dict[Key, np.nd
     }
 
 
-def load_embeddings(model_name: str, checkpoint: str | None = None) -> dict[Key, np.ndarray]:
+def load_embeddings(model_name: str, checkpoint: str | None = None) -> dict[ImageRecordKey, np.ndarray]:
     """Return {ImageRecord.key: embedding}. If checkpoint is given it must match the stored one."""
     return _read(model_name, checkpoint)[1]
 

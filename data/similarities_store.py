@@ -21,7 +21,6 @@ def _path(model_name: str) -> Path:
 
 
 def _row(metric: str, q: Key, i: Key, score: float) -> list[str]:
-    # None modification is stored as an empty string
     return [metric, q[0], q[1], q[2] or "", i[0], i[1], i[2] or "", repr(score)]
 
 
@@ -43,7 +42,10 @@ def save_similarities(
     metric: str,
     similarities: dict[ImageRecord, list[tuple[ImageRecord, float]]],
 ) -> None:
-    """Store {query_record: [(instruction_record, score), ...]}, merging with scores already saved."""
+    """Store {query_record: [(instruction_record, score), ...]}, merging with scores already saved.
+        Similarities are stored in a  file similarities_{model_name} 
+        Each row is composed of (metric, query_image.key, other_image.key, similarity_score)    
+    """
     merged = load_similarities(model_name)
     for query, matches in similarities.items():
         for instruction, score in matches:
