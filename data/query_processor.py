@@ -7,8 +7,9 @@ from .images_dto import ImageClass, ImageRecord, read_images, write_images
 
 import torch
 
-from .embeddings_store import save_embeddings
-from .similarities_store import save_similarities
+from .benchmarks_store import save_benchmarks
+from .embeddings_store import load_embeddings, save_embeddings
+from .similarities_store import load_similarities, save_similarities
 
 IMAGE_RECORDS_PATH = Path(__file__).parent / "files" / "image_records.csv"
 
@@ -67,7 +68,18 @@ def store_similarities(
     """Persist query-instruction similarity scores computed from the given model's embeddings."""
     save_similarities(model, metric, similarities)
 
-def load_embeddings_index() -> None:
-    return
+def load_model_embeddings(model: str, checkpoint: str | None = None):
+    """Load all stored embeddings of a model, keyed by image record key."""
+    return load_embeddings(model, checkpoint)
+
+
+def load_model_similarities(model: str):
+    """Load all stored similarity scores of a model."""
+    return load_similarities(model)
+
+
+def store_benchmarks(model: str, metric: str, scores: dict[ImageRecord, dict[str, float]]) -> None:
+    """Persist benchmark scores computed for the given model."""
+    save_benchmarks(model, metric, scores)
 
 

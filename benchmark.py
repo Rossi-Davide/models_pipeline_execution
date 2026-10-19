@@ -5,11 +5,12 @@ similarity (same model, same build), one of the top-k has the same step number a
 """
 from collections import defaultdict
 
-from data.benchmarks_store import save_benchmarks
-from data.embeddings_store import load_embeddings
 from data.images_dto import ImageClass, ImageRecord
-from data.query_processor import get_images_from_dataset
-from data.similarities_store import load_similarities
+from data.query_processor import (
+    get_images_from_dataset,
+    load_model_embeddings,
+    store_benchmarks,
+)
 import faiss
 import numpy as np
 import torch
@@ -51,7 +52,7 @@ def compute_accuracy_unit_scores_with_index(
     uncomputed_records = []
 
 
-    embeddings = load_embeddings(model_name)
+    embeddings = load_model_embeddings(model_name)
     scores: dict[ImageRecord, dict[str, float]] = {}
     for image_record in records:
         image_embedding = embeddings.get(image_record.key)
@@ -63,7 +64,7 @@ def compute_accuracy_unit_scores_with_index(
             raise ValueError(f"No index for {image_record.build_name} was found")
         accuracy_scores = _compute_top_k_accuracies(image_record,image_embedding, index)
         scores[image_record] = accuracy_scores
-    save_benchmarks(model_name,metric,scores)
+    store_benchmarks(model_name,metric,scores)
     return scores
 
 
