@@ -60,7 +60,9 @@ def store_embeddings(
     if not embedded:
         return
     records = [r for r, _ in embedded]
-    matrix = np.stack([e.detach().cpu().float().numpy().reshape(-1) for _, e in embedded])
+    # move tensor to cpu, convert to numpy array and squeeze so that dimension for most encoders is (D,)
+    # matrix has dimensions (N,D)
+    matrix = np.stack([e.detach().cpu().float().numpy().squeeze() for _, e in embedded])
     save_embeddings(model, checkpoint, records, matrix)
 
 
