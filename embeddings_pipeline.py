@@ -55,7 +55,7 @@ def main() -> None:
     print("Computing cosine similarities")
     similarities = compute_cosine_similarities_from_embeddings(instruction_indexes, query_embeds)
     print("Storing cosine similarities")
-    store_similarities(model.name, "cosine", similarities)
+    store_similarities(model.name, "cosine", similarities, model.checkpoint)
     print(f"Computed similarities for {len(similarities)} query images")
     # compute accuracy unit scores
     query_records = [record for record, _ in query_embeds]

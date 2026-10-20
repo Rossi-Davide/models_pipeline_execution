@@ -68,22 +68,28 @@ def store_similarities(
     model: str,
     metric: str,
     similarities: dict[ImageRecord, list[tuple[ImageRecord, float]]],
+    checkpoint: str | None = None,
 ) -> None:
     """Persist query-instruction similarity scores computed from the given model's embeddings."""
-    save_similarities(model, metric, similarities)
+    save_similarities(model, metric, similarities, checkpoint)
 
 def load_model_embeddings(model: str, checkpoint: str | None = None) -> dict:
     """Load all stored embeddings of a model as torch tensors, keyed by image record key."""
     return {key: torch.from_numpy(vec) for key, vec in load_embeddings(model, checkpoint).items()}
 
 
-def load_model_similarities(model: str):
-    """Load all stored similarity scores of a model."""
-    return load_similarities(model)
+def load_model_similarities(model: str, checkpoint: str | None = None):
+    """Load all stored similarity scores of a model and checkpoint."""
+    return load_similarities(model, checkpoint)
 
 
-def store_benchmarks(model: str, metric: str, scores: dict[ImageRecord, dict[str, float]]) -> None:
-    """Persist benchmark scores computed for the given model."""
-    save_benchmarks(model, metric, scores)
+def store_benchmarks(
+    model: str,
+    metric: str,
+    scores: dict[ImageRecord, dict[str, float]],
+    checkpoint: str | None = None,
+) -> None:
+    """Persist benchmark scores computed for the given model and checkpoint."""
+    save_benchmarks(model, metric, scores, checkpoint)
 
 

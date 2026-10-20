@@ -62,7 +62,7 @@ def compute_accuracy_unit_scores_with_index(
             continue
         accuracy_scores = _compute_top_k_accuracies(image_record,image_embedding, index)
         scores[image_record] = accuracy_scores
-    store_benchmarks(model_name,metric,scores)
+    store_benchmarks(model_name, metric, scores, checkpoint)
     warnings.warn(f"""
     These records were uncomputed because no embedding 
     was found or index of corresponding build wasn't found

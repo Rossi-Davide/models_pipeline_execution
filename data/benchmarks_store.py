@@ -1,5 +1,5 @@
-"""Persistence of per-embedding benchmark (top-k) scores, keyed by (model, similarity_metric, query ImageRecord.key, benchmark_metric).
-    Benchmark scores coming from embeddings of the same model are kept in the same file
+"""Persistence of per-embedding benchmark (top-k) scores, keyed by (similarity_metric, query ImageRecord.key, benchmark_metric).
+    Each "{model_name}-{checkpoint}" has its own file (just "{model_name}" when no checkpoint is given)
 """
 import csv
 from pathlib import Path
@@ -13,13 +13,14 @@ ImageRecordKey = tuple[str, str, str | None]
 _HEADER = ["metric", "folder", "image", "mod", "benchmark_metric", "unit_score"]
 
 
-def _path(model_name: str) -> Path:
-    return BENCHMARKS_DIR / f"benchmarks_{model_name}.csv"
+def _path(model_name: str, checkpoint: str | None) -> Path:
+    #checkpoints can be paths like "openai/clip-vit-base-patch32"
+    name = f"{model_name}-{checkpoint}".replace("/", "_") if checkpoint else model_name
+    return BENCHMARKS_DIR / f"benchmarks_{name}.csv"
 
-
-def load_benchmarks(model_name: str) -> dict[tuple[str, ImageRecordKey], dict[str, float]]:
-    """Return {(metric, query_key): {benchmark_metric: unit_score}} for a model."""
-    path = _path(model_name)
+def load_benchmarks(model_name: str, checkpoint: str | None) -> dict[tuple[str, ImageRecordKey], dict[str, float]]:
+    """Return {(metric, query_key): {benchmark_metric: unit_score}} for a model and checkpoint."""
+    path = _path(model_name, checkpoint)
     if not path.exists() or path.stat().st_size == 0:
         return {}
     out: dict[tuple[str, ImageRecordKey], dict[str, float]] = {}
@@ -30,15 +31,19 @@ def load_benchmarks(model_name: str) -> dict[tuple[str, ImageRecordKey], dict[st
     return out
 
 
-def save_benchmarks(model_name: str, metric: str, scores: dict[ImageRecord, dict[str, float]]) -> None:
+def save_benchmarks(
+    model_name: str,
+    metric: str,
+    scores: dict[ImageRecord, dict[str, float]],
+    checkpoint: str | None = None,
+) -> None:
     """Store {query_record: {benchmark_metric: unit_score}}, merging with scores already saved."""
-    merged = load_benchmarks(model_name)
-    for record, by_k in scores.items():
-        #set new scores dictionary for given entry, removes all previous scores for {metric,image_record}!!
-        merged.setdefault((metric, record.key), {}).update(by_k)
+    merged = load_benchmarks(model_name, checkpoint)
+    for record, benchmark_scores in scores.items():
+        merged.setdefault((metric, record.key), {}).update(benchmark_scores)
 
     BENCHMARKS_DIR.mkdir(parents=True, exist_ok=True)
-    with open(_path(model_name), "w", newline="", encoding="utf-8") as f:
+    with open(_path(model_name, checkpoint), "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(_HEADER)
         for (m, k), by_k in merged.items():
