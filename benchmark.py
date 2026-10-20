@@ -7,10 +7,7 @@ similarity (same model, same build), one of the top-k has the same step number a
 import warnings
 
 from data.images_store import ImageRecord
-from data.query_processor import (
-    load_model_embeddings,
-    store_benchmarks,
-)
+from data.query_processor import load_model_embeddings
 import faiss
 import torch
 import torch.nn.functional as F
@@ -39,12 +36,11 @@ def compute_accuracy_unit_scores_with_index(
     model_name: str,
     records: list[ImageRecord],
     instruction_indexes: dict[str, tuple[faiss.Index, list[ImageRecord]]], 
-    metric: str = "cosine",
     checkpoint: str | None = None,
 ) -> dict[ImageRecord, dict[str, float]]:
     """
     Compute benchmark unit scores for given image records
-    Return {query_record: {k: 1.0 if a top-k instruction has the same step else 0.0}}.
+    Return {query_record: {k: 1.0 if a top-k instruction has the same step else 0.0}}; storing is left to the caller.
 
     Query images without a stored embedding or whose build is not in the index are skipped
     """
@@ -62,7 +58,6 @@ def compute_accuracy_unit_scores_with_index(
             continue
         accuracy_scores = _compute_top_k_accuracies(image_record,image_embedding, index)
         scores[image_record] = accuracy_scores
-    store_benchmarks(model_name, metric, scores, checkpoint)
     warnings.warn(f"""
     These records were uncomputed because no embedding 
     was found or index of corresponding build wasn't found

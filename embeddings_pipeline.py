@@ -3,7 +3,7 @@ import argparse
 import torch
 
 from data.images_store import ImageRecord, ImageClass
-from data.query_processor import get_images_for_build, get_images_from_dataset, store_embeddings, store_similarities
+from data.query_processor import get_images_for_build, get_images_from_dataset, store_benchmarks, store_embeddings, store_similarities
 from pipeline_modelli import Model
 from similarity_index import build_flat_indexes_per_build, compute_cosine_similarities_from_embeddings
 from benchmark import compute_accuracy_unit_scores_with_index
@@ -39,11 +39,13 @@ def main() -> None:
     #load image records
     query_records = load_image_records(args.build)
     print(f"Loaded {model} and {len(query_records)} image records")
+
     #compute and store embeddings
     embedded = compute_embeddings_for_batch(model, query_records)
     print(f"Embeddings computed for {len(embedded)}")
     store_embeddings(embedded, model.name, model.checkpoint)
     print("Embeddings stored successfully on file")
+
     #create FAISS indexes from embeddings for faster lookup
     instruction_embeds = [(record, embedding)  for (record, embedding) in embedded if record.img_class == ImageClass.INSTRUCTION]
     query_embeds = [(record, embedding)  for (record, embedding) in embedded if record.img_class == ImageClass.QUERY_IMAGE]
@@ -51,16 +53,20 @@ def main() -> None:
     print(f"Instruction indexes built for images")
     for build in instruction_indexes.keys():
         print(f"Build:{build} with {len(instruction_indexes[build][1])} images")
+
     #compute cosine similarities of query images against instruction images of the same build
     print("Computing cosine similarities")
     similarities = compute_cosine_similarities_from_embeddings(instruction_indexes, query_embeds)
     print("Storing cosine similarities")
     store_similarities(model.name, "cosine", similarities, model.checkpoint)
     print(f"Computed similarities for {len(similarities)} query images")
+    
     # compute accuracy unit scores
     query_records = [record for record, _ in query_embeds]
     #unit scores might vary based on benchmark metric, embeddings and similarity metric
-    compute_accuracy_unit_scores_with_index(model.name, query_records, instruction_indexes, checkpoint=model.checkpoint)
+    scores = compute_accuracy_unit_scores_with_index(model.name, query_records, instruction_indexes, checkpoint=model.checkpoint)
+    print("Storing benchmark scores")
+    store_benchmarks(model.name, "cosine", scores, model.checkpoint)
 
 if __name__ == "__main__":
     main()
