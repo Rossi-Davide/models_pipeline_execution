@@ -69,6 +69,15 @@ class Backend(ABC):
         return out
 
 
+def _as_tensor(out) -> torch.Tensor:
+    """transformers>=5 returns an output object (projected features in pooler_output), older versions a tensor."""
+    if isinstance(out, torch.Tensor):
+        return out
+    if getattr(out, "pooler_output", None) is not None:
+        return out.pooler_output
+    return out[0]
+
+
 @register("clip")
 class CLIPBackend(Backend):
     default_checkpoint = "openai/clip-vit-base-patch32"
@@ -77,19 +86,20 @@ class CLIPBackend(Backend):
         from transformers import CLIPModel, CLIPProcessor
 
         self.processor = CLIPProcessor.from_pretrained(self.checkpoint)
-        self.model = CLIPModel.from_pretrained(self.checkpoint, torch_dtype=self.dtype).to(self.device).eval()
+        device = torch.device(self.device)
+        self.model = CLIPModel.from_pretrained(self.checkpoint, torch_dtype=self.dtype).to(device).eval()
 
     @torch.inference_mode()
     def encode_image(self, images: ImageInput) -> torch.Tensor:
-        inputs = self._to_device(self.processor(images=_as_list(images), return_tensors="pt"))
-        return self.model.get_image_features(**inputs)
+        inputs = self._to_device(self.processor(images=_as_list(images), return_tensors = "pt"))
+        return _as_tensor(self.model.get_image_features(**inputs))
 
     @torch.inference_mode()
     def encode_text(self, texts: TextInput) -> torch.Tensor:
         inputs = self._to_device(
             self.processor(text=_as_list(texts), return_tensors="pt", padding=True, truncation=True)
         )
-        return self.model.get_text_features(**inputs)
+        return _as_tensor(self.model.get_text_features(**inputs))
 
 
 @register("dinov3")

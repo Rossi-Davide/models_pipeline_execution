@@ -28,14 +28,16 @@ def compute_embeddings_for_batch(model: Model, records: Iterable[ImageRecord]) -
     for record in records:
         path = Path(record.folder_path) / record.image_name
         with Image.open(path) as img:
+            print(f"Opened {path}")
             results.append((record, model.encode_image(img)))
+            print(f"Successfully encoded {path}")
     return results
 
 
 def main() -> None:
     args = parse_args()
     #load model
-    model = Model(args.model, checkpoint=args.checkpoint)
+    model = Model(args.model, checkpoint=args.checkpoin, normalize=False)
     #load image records
     query_records = load_image_records(args.build)
     print(f"Loaded {model} and {len(query_records)} image records")
