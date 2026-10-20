@@ -3,7 +3,7 @@ import argparse
 import torch
 
 from data.images_store import ImageRecord, ImageClass
-from data.query_processor import get_images_for_build, get_images_from_dataset, store_embedding, store_similarities
+from data.query_processor import get_images_for_build, get_images_from_dataset, store_embeddings, store_similarities
 from pipeline_modelli import Model
 from similarity_index import build_flat_indexes_per_build, compute_cosine_similarities_from_embeddings
 from benchmark import compute_accuracy_unit_scores_with_index
@@ -39,8 +39,7 @@ def main() -> None:
     print(f"Loaded {model} and {len(query_records)} image records")
 
     embedded = compute_embeddings_for_batch(model, query_records)
-    for record, embedding in embedded:
-        store_embedding(record, model.name, embedding, model.checkpoint)
+    store_embeddings(embedded, model.name, model.checkpoint)
 
     instruction_embeds = [(record, embedding)  for (record, embedding) in embedded if record.img_class == ImageClass.INSTRUCTION]
     query_embeds = [(record, embedding)  for (record, embedding) in embedded if record.img_class == ImageClass.QUERY_IMAGE]

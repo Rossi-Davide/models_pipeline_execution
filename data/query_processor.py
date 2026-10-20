@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .images_store import ImageClass, ImageRecord, read_images, write_images
 
+import numpy as np
 import torch
 
 from .benchmarks_store import save_benchmarks
@@ -50,15 +51,18 @@ def get_instructions_for_build(build_name: str) -> list[ImageRecord]:
 def get_query_images_for_build(build_name: str) -> list[ImageRecord]:
     return [r for r in get_images_for_build(build_name) if r.img_class == ImageClass.QUERY_IMAGE]
 
-def store_embedding(
-    image_record: ImageRecord,
+def store_embeddings(
+    embedded: list[tuple[ImageRecord, torch.Tensor]],
     model: str,
-    embedding: torch.Tensor,
     checkpoint: str | None = None,
 ) -> None:
-    """Persist the embedding of one image for the given model, linked through image_record.key."""
-    vector = embedding.detach().cpu().float().numpy().reshape(1, -1)
-    save_embeddings(model, checkpoint, [image_record], vector)
+    """Persist the embeddings of many images in a single write, linked through image_record.key."""
+    if not embedded:
+        return
+    records = [r for r, _ in embedded]
+    matrix = np.stack([e.detach().cpu().float().numpy().reshape(-1) for _, e in embedded])
+    save_embeddings(model, checkpoint, records, matrix)
+
 
 def store_similarities(
     model: str,
