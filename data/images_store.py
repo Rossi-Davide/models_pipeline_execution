@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 from enum import Enum
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple, Union
 
@@ -20,7 +20,9 @@ class ImageRecord:
     image_name: str
     step_number: int
     img_class: ImageClass
+    tags: list[str] = field(hash=False, compare=False)
     modification: Optional[str] = None
+
 
     @property
     def key(self) -> Tuple[str, str, Optional[str]]:
@@ -34,10 +36,11 @@ _COLUMNS = [f.name for f in fields(ImageRecord)]
 def write_images(path: Union[str, Path], records: Iterable[ImageRecord]) -> None:
     """Write records to a tab-separated txt file (None modification -> empty field)."""
     with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f, delimiter="\t")
+        writer = csv.writer(f)
         writer.writerow(_COLUMNS)
         for r in records:
-            writer.writerow([r.folder_path, r.build_name, r.image_name, r.step_number, r.img_class.value, r.modification or ""])
+            tags_string = "|".join(r.tags)
+            writer.writerow([r.folder_path, r.build_name, r.image_name, r.step_number, r.img_class.value,tags_string,r.modification or ""])
 
 
 def read_images(path: Union[str, Path]) -> List[ImageRecord]:
@@ -50,7 +53,8 @@ def read_images(path: Union[str, Path]) -> List[ImageRecord]:
                 image_name=row["image_name"],
                 step_number=int(row["step_number"]),
                 img_class=ImageClass(row["img_class"]),
+                tags=[tag for tag in row.get("tags","").split('|') if tag != ""],
                 modification=row["modification"] or None,
             )
-            for row in csv.DictReader(f, delimiter="\t")
+            for row in csv.DictReader(f)
         ]
