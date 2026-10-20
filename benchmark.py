@@ -40,6 +40,7 @@ def compute_accuracy_unit_scores_with_index(
     records: list[ImageRecord],
     instruction_indexes: dict[str, tuple[faiss.Index, list[ImageRecord]]], 
     metric: str = "cosine",
+    checkpoint: str | None = None,
 ) -> dict[ImageRecord, dict[str, float]]:
     """
     Compute benchmark unit scores for given image records
@@ -48,7 +49,7 @@ def compute_accuracy_unit_scores_with_index(
     Query images without a stored embedding or whose build is not in the index are skipped
     """
     uncomputed_records = []
-    embeddings = load_model_embeddings(model_name)
+    embeddings = load_model_embeddings(model_name, checkpoint)
     scores: dict[ImageRecord, dict[str, float]] = {}
     for image_record in records:
         image_embedding = embeddings.get(image_record.key)

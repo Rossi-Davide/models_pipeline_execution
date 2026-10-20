@@ -14,6 +14,7 @@ from typing import Iterable
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Compute image embeddings with a model.")
     parser.add_argument("--model", required=True, help=f"Model name, one of: {Model.available()}")
+    parser.add_argument("--checkpoint", default=None, help="Model checkpoint; defaults to the model's default checkpoint")
     parser.add_argument("--build", default=None, help="Build name; if omitted the entire dataset is used")
     return parser.parse_args()
 
@@ -33,14 +34,13 @@ def compute_embeddings_for_batch(model: Model, records: Iterable[ImageRecord]) -
 
 def main() -> None:
     args = parse_args()
-    model = Model(args.model)
+    model = Model(args.model, checkpoint=args.checkpoint)
     query_records = load_image_records(args.build)
     print(f"Loaded {model} and {len(query_records)} image records")
 
     embedded = compute_embeddings_for_batch(model, query_records)
     for record, embedding in embedded:
-        #TODO: rework checkpoint paramenter
-        store_embedding(record, model.name, embedding)
+        store_embedding(record, model.name, embedding, model.checkpoint)
 
     instruction_embeds = [(record, embedding)  for (record, embedding) in embedded if record.img_class == ImageClass.INSTRUCTION]
     query_embeds = [(record, embedding)  for (record, embedding) in embedded if record.img_class == ImageClass.QUERY_IMAGE]
@@ -51,7 +51,7 @@ def main() -> None:
     print(f"Built {len(instruction_indexes)} index(es); computed similarities for {len(similarities)} query images")
     query_records = [record for record, _ in query_embeds]
     #unit scores might vary based on benchmark metric, embeddings and similarity metric
-    compute_accuracy_unit_scores_with_index(model.name, query_records, instruction_indexes)
+    compute_accuracy_unit_scores_with_index(model.name, query_records, instruction_indexes, checkpoint=model.checkpoint)
 
 if __name__ == "__main__":
     main()
