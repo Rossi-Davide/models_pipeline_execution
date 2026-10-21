@@ -12,6 +12,8 @@ from typing import Callable, Dict, List, Sequence, Type, Union
 import torch
 from PIL import Image
 
+import warnings
+
 ImageInput = Union[Image.Image, Sequence[Image.Image]]
 TextInput = Union[str, Sequence[str]]
 
@@ -88,11 +90,29 @@ class CLIPBackend(Backend):
         self.processor = CLIPProcessor.from_pretrained(self.checkpoint)
         device = torch.device(self.device)
         self.model = CLIPModel.from_pretrained(self.checkpoint, torch_dtype=self.dtype).to(device).eval()
+        print(f"[CLIPBackend] device={next(self.model.parameters()).device}, dtype={next(self.model.parameters()).dtype}, training={self.model.training}")
+        print(f"[CLIPBackend] params={sum(p.numel() for p in self.model.parameters()):,}")
+        last_name, last_param = list(self.model.named_parameters())[-1]
+        print(f"[CLIPBackend] last layer param: {last_name} shape={tuple(last_param.shape)}")
 
     @torch.inference_mode()
     def encode_image(self, images: ImageInput) -> torch.Tensor:
+        from transformers.modeling_outputs import BaseModelOutputWithPooling
+        
         inputs = self._to_device(self.processor(images=_as_list(images), return_tensors = "pt"))
-        return _as_tensor(self.model.get_image_features(**inputs))
+        image_features = self.model.get_image_features(**inputs, return_dict=True)
+        #parse output from CLIP get image features
+        if isinstance(image_features, torch.Tensor):
+            warnings.warn(f"Expected image_features to be output object, instead is {image_features.dtype}")
+            return image_features
+        elif isinstance(image_features, BaseModelOutputWithPooling):
+            if image_features.last_hidden_state is not None:
+                return image_features.last_hidden_state
+            else:
+                raise ValueError("Image Features is an output object with no hidden state")
+        else:
+            warnings.warn(f"Expected image_features to be output object, instead is {image_features.dtype}")
+            return image_features[0]
 
 
 @register("dinov3")
@@ -104,6 +124,10 @@ class DINOv3Backend(Backend):
 
         self.processor = AutoImageProcessor.from_pretrained(self.checkpoint)
         self.model = AutoModel.from_pretrained(self.checkpoint, torch_dtype=self.dtype).to(self.device).eval()
+        print(f"[DINOv3Backend] device={next(self.model.parameters()).device}, dtype={next(self.model.parameters()).dtype}, training={self.model.training}")
+        print(f"[DINOv3Backend] params={sum(p.numel() for p in self.model.parameters()):,}")
+        last_name, last_param = list(self.model.named_parameters())[-1]
+        print(f"[DINOv3Backend] last layer param: {last_name} shape={tuple(last_param.shape)}")
 
     @torch.inference_mode()
     def encode_image(self, images: ImageInput) -> torch.Tensor:
