@@ -37,7 +37,7 @@ def compute_embeddings_for_batch(model: Model, records: Iterable[ImageRecord]) -
 def main() -> None:
     args = parse_args()
     #load model
-    model = Model(args.model, checkpoint=args.checkpoin, normalize=False)
+    model = Model(args.model, checkpoint=args.checkpoint, normalize=False)
     #load image records
     query_records = load_image_records(args.build)
     print(f"Loaded {model} and {len(query_records)} image records")
