@@ -94,13 +94,6 @@ class CLIPBackend(Backend):
         inputs = self._to_device(self.processor(images=_as_list(images), return_tensors = "pt"))
         return _as_tensor(self.model.get_image_features(**inputs))
 
-    @torch.inference_mode()
-    def encode_text(self, texts: TextInput) -> torch.Tensor:
-        inputs = self._to_device(
-            self.processor(text=_as_list(texts), return_tensors="pt", padding=True, truncation=True)
-        )
-        return _as_tensor(self.model.get_text_features(**inputs))
-
 
 @register("dinov3")
 class DINOv3Backend(Backend):
@@ -115,4 +108,4 @@ class DINOv3Backend(Backend):
     @torch.inference_mode()
     def encode_image(self, images: ImageInput) -> torch.Tensor:
         inputs = self._to_device(self.processor(images=_as_list(images), return_tensors="pt"))
-        return self.model(**inputs).pooler_output  # CLS token embedding
+        return self.model(**inputs).last_hidden_state  # CLS and patch tokens
