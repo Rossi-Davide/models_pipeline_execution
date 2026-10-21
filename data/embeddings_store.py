@@ -19,7 +19,7 @@ def _path(model_name: str, checkpoint: str | None) -> Path:
     return EMBEDDINGS_DIR / f"embeddings_{name}.npz"
 
 
-def save_embeddings(
+def save_embeddings_as_nparray(
     model_name: str,
     checkpoint: str | None,
     records: list[ImageRecord],

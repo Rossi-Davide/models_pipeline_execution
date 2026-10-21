@@ -9,10 +9,10 @@ import warnings
 from data.images_store import ImageRecord
 from data.query_processor import load_model_embeddings
 import faiss
+import numpy as np
 import torch
-import torch.nn.functional as F
 
-TOP_K = [1, 3, 5]
+TOP_K: list[int] = [1, 3, 5]
 
 def _compute_top_k_accuracies(
     image_record: ImageRecord,
@@ -21,11 +21,15 @@ def _compute_top_k_accuracies(
 ) -> dict[str, float]:
     """Return {k: 1.0 if one of the k nearest instruction images has the query's step number else 0.0}."""
     faiss_index, records = index
-    #faiss expects a (1, D) float32 batch; the index holds L2-normalized vectors (cosine)
-    query = F.normalize(image_embedding.float().reshape(1, -1), dim=-1)
+    #the index holds L2-normalized vectors (cosine)
+    #convert flattened vector (D,) to (1,D)
+    query_vector = np.ascontiguousarray(
+        image_embedding.detach().cpu().float().numpy()[np.newaxis,:], dtype="float32"
+    )
+    faiss.normalize_L2(query_vector)
     accuracies: dict[str, float] = {}
     for k in TOP_K:
-        _, ids = faiss_index.search(query.numpy(), min(k, faiss_index.ntotal))
+        _, ids = faiss_index.search(query_vector, k)
         accuracies[f"top_{k}"] = float(
             any(records[i].step_number == image_record.step_number for i in ids[0] if i != -1)
         )

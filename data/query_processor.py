@@ -9,7 +9,7 @@ import numpy as np
 import torch
 
 from .benchmarks_store import save_benchmarks
-from .embeddings_store import load_embeddings, save_embeddings
+from .embeddings_store import load_embeddings, save_embeddings_as_nparray
 from .similarities_store import load_similarities, save_similarities
 
 IMAGE_RECORDS_PATH = Path(__file__).parent / "files" / "image_records.csv"
@@ -60,10 +60,10 @@ def store_embeddings(
     if not embedded:
         return
     records = [r for r, _ in embedded]
-    # move tensor to cpu, convert to numpy array and squeeze so that dimension for most encoders is (D,)
+    # move tensor to cpu, convert to numpy array and flatten so that shape is (D,)
     # matrix has dimensions (N,D)
-    matrix = np.stack([e.detach().cpu().float().numpy().squeeze() for _, e in embedded])
-    save_embeddings(model, checkpoint, records, matrix)
+    matrix = np.stack([e.detach().cpu().float().numpy().flatten() for _, e in embedded])
+    save_embeddings_as_nparray(model, checkpoint, records, matrix)
 
 
 def store_similarities(
@@ -77,7 +77,7 @@ def store_similarities(
 
 def load_model_embeddings(model: str, checkpoint: str | None = None) -> dict:
     """Load all stored embeddings of a model as torch tensors, keyed by image record key."""
-    return {key: torch.from_numpy(vec) for key, vec in load_embeddings(model, checkpoint).items()}
+    return {key: torch.from_numpy(vec).flatten() for key, vec in load_embeddings(model, checkpoint).items()}
 
 
 def load_model_similarities(model: str, checkpoint: str | None = None):

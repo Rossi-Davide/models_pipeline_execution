@@ -7,10 +7,10 @@ import torch
 
 from data.images_store import ImageRecord
 
-
+#converts vectors to numpy array and stacks them since vectors have shape (1,D) return has shape (N,D)
 def _to_matrix(embeddings: list[torch.Tensor]) -> np.ndarray:
     return np.ascontiguousarray(
-        np.stack([e.detach().cpu().float().numpy().reshape(-1) for e in embeddings]), dtype="float32"
+        np.stack([e.detach().cpu().float().numpy().flatten() for e in embeddings]), dtype="float32"
     )
 
 
