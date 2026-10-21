@@ -97,22 +97,11 @@ class CLIPBackend(Backend):
 
     @torch.inference_mode()
     def encode_image(self, images: ImageInput) -> torch.Tensor:
-        from transformers.modeling_outputs import BaseModelOutputWithPooling
-        
-        inputs = self._to_device(self.processor(images=_as_list(images), return_tensors = "pt"))
-        image_features = self.model.get_image_features(**inputs, return_dict=True)
-        #parse output from CLIP get image features
-        if isinstance(image_features, torch.Tensor):
-            warnings.warn(f"Expected image_features to be output object, instead is {image_features.dtype}")
-            return image_features
-        elif isinstance(image_features, BaseModelOutputWithPooling):
-            if image_features.last_hidden_state is not None:
-                return image_features.last_hidden_state
-            else:
-                raise ValueError("Image Features is an output object with no hidden state")
-        else:
-            warnings.warn(f"Expected image_features to be output object, instead is {image_features.dtype}")
-            return image_features[0]
+        inputs = self._to_device(self.processor(images=_as_list(images), return_tensors="pt"))
+        # on transformers < 5 it returns pooled features, otherwise a BaseModelOutputWithPooling that has pooler_output parameter
+        #using last_hidden_state is wrong because it returns the raw vision-encoder tokens
+        out = self.model.get_image_features(**inputs)
+        return _as_tensor(out)  # projected image embeddings (B, D)
 
 
 @register("dinov3")
@@ -132,4 +121,4 @@ class DINOv3Backend(Backend):
     @torch.inference_mode()
     def encode_image(self, images: ImageInput) -> torch.Tensor:
         inputs = self._to_device(self.processor(images=_as_list(images), return_tensors="pt"))
-        return self.model(**inputs).last_hidden_state  # CLS and patch tokens
+        return self.model(**inputs).last_hidden_state.mean(dim=1)  # mean over CLS, register and patch tokens -> (B, D)
