@@ -20,3 +20,11 @@ DINOv3 checkpoints on Hugging Face are gated: accept the license and run `huggin
 ## Adding a model
 
 Subclass `Backend` in `pipeline_modelli/backends.py`, implement `load` / `encode_image` / `encode_text`, and decorate with `@register("name")`.
+
+## Building `image_records.csv`
+
+```
+python build_image_records.py <dataset_root> [-o data/files/image_records.csv]
+```
+
+Scans `<root>/<build>/<step>/<category>/<file>`; `instruction/` images get class `instruction`, the rest `query_image`. Tags are the `-`-separated words of the file name, minus the trailing step number.
