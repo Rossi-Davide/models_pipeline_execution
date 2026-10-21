@@ -117,7 +117,7 @@ class CLIPBackend(Backend):
 
 @register("dinov3")
 class DINOv3Backend(Backend):
-    default_checkpoint = "facebook/dinov3-vitb16-pretrain-lvd1689m"
+    default_checkpoint = "facebook/dinov3-vitl16-pretrain-lvd1689m"
 
     def load(self) -> None:
         from transformers import AutoImageProcessor, AutoModel
