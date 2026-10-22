@@ -2,6 +2,7 @@
     Each "{model_name}-{checkpoint}" has its own file (just "{model_name}" when no checkpoint is given)
 """
 import csv
+import pandas as pd
 from pathlib import Path
 
 from .images_store import ImageRecord
@@ -49,3 +50,10 @@ def save_benchmarks(
         for (m, k), by_k in merged.items():
             for top_k, score in sorted(by_k.items()):
                 writer.writerow([m, k[0], k[1], k[2] or "", top_k, repr(score)])
+
+def load_benchmarks_as_df(model_name: str, checkpoint: str | None) -> pd.DataFrame:
+    path = _path(model_name, checkpoint)
+    if not path.exists() or path.stat().st_size == 0:
+        return pd.DataFrame()
+    df = pd.read_csv(path, sep=',', header=0)
+    return df

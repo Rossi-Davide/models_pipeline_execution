@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import pandas as pd
 from enum import Enum
 from dataclasses import dataclass, field, fields
 from pathlib import Path
@@ -30,6 +31,7 @@ class ImageRecord:
         return (self.folder_path, self.image_name, self.modification)
 
 
+_INDEX_COLS = ['folder_path','image_name','modification']
 _COLUMNS = [f.name for f in fields(ImageRecord)]
 
 
@@ -58,3 +60,9 @@ def read_images(path: Union[str, Path]) -> List[ImageRecord]:
             )
             for row in csv.DictReader(f)
         ]
+
+def load_images_as_df(path: Path) -> pd.DataFrame:
+    if not path.exists() or path.stat().st_size == 0:
+        return pd.DataFrame()
+    df = pd.read_csv(path, sep=',', header=0)
+    return df.set_index(_INDEX_COLS)   

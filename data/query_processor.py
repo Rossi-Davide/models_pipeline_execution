@@ -3,12 +3,13 @@ Utility functions to call and handle write and read operations to disk files
 """
 from pathlib import Path
 
-from .images_store import ImageClass, ImageRecord, read_images, write_images
+from .images_store import ImageClass, ImageRecord, read_images, write_images, load_images_as_df
 
 import numpy as np
 import torch
+import pandas as pd
 
-from .benchmarks_store import save_benchmarks
+from .benchmarks_store import save_benchmarks, load_benchmarks_as_df
 from .embeddings_store import load_embeddings, save_embeddings_as_nparray
 from .similarities_store import load_similarities, save_similarities
 
@@ -95,3 +96,8 @@ def store_benchmarks(
     save_benchmarks(model, metric, scores, checkpoint)
 
 
+def load_model_benchmarks_as_df(model: str, checkpoint: str | None) -> pd.DataFrame:
+    return load_benchmarks_as_df(model_name=model, checkpoint=checkpoint)
+
+def load_image_records_as_df() -> pd.DataFrame:
+    return load_images_as_df(IMAGE_RECORDS_PATH)
