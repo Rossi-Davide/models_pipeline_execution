@@ -30,7 +30,9 @@ def parse_tags(stem: str) -> list[str]:
 def scan(root: Path) -> list[ImageRecord]:
     records = []
     for path in sorted(root.glob("*/*/*/*")):
-        if not path.is_file() or path.name.startswith(".") or path.suffix.lower() not in IMAGE_EXTENSIONS:
+        if any(part.startswith(".") for part in path.relative_to(root).parts):
+            continue
+        if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
             continue
         build, step, category = path.relative_to(root).parts[:3]
         if not step.isdigit():
