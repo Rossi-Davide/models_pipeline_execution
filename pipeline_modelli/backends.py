@@ -104,6 +104,31 @@ class CLIPBackend(Backend):
         return _as_tensor(out)  # projected image embeddings (B, D)
 
 
+@register("clip_ratio")
+class CLIPRatioBackend(Backend):
+    default_checkpoint = "openai/clip-vit-base-patch32"
+
+    def load(self) -> None:
+        from transformers import CLIPModel, CLIPProcessor
+
+        self.processor = CLIPProcessor.from_pretrained(self.checkpoint)
+        # width fixed to 1600, height follows the aspect ratio (max_height is just a very large bound)
+        self.processor.image_processor.size = {"max_width": 1600, "max_height": 10**6}
+        self.processor.image_processor.do_center_crop = False
+        device = torch.device(self.device)
+        self.model = CLIPModel.from_pretrained(self.checkpoint, torch_dtype=self.dtype).to(device).eval()
+        print(f"[CLIPRatioBackend] device={next(self.model.parameters()).device}, dtype={next(self.model.parameters()).dtype}, training={self.model.training}")
+        print(f"[CLIPRatioBackend] params={sum(p.numel() for p in self.model.parameters()):,}")
+        last_name, last_param = list(self.model.named_parameters())[-1]
+        print(f"[CLIPRatioBackend] last layer param: {last_name} shape={tuple(last_param.shape)}")
+
+    @torch.inference_mode()
+    def encode_image(self, images: ImageInput) -> torch.Tensor:
+        inputs = self._to_device(self.processor(images=_as_list(images), return_tensors="pt"))
+        out = self.model.get_image_features(**inputs, interpolate_pos_encoding=True)
+        return _as_tensor(out)  # projected image embeddings (B, D)
+
+
 @register("dinov3")
 class DINOv3Backend(Backend):
     default_checkpoint = "facebook/dinov3-vitl16-pretrain-lvd1689m"
