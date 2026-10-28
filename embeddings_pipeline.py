@@ -29,7 +29,7 @@ def compute_embeddings_for_batch(model: Model, records: Iterable[ImageRecord]) -
     for record in records:
         path = Path(record.folder_path) / record.image_name
         with Image.open(path) as img:
-            print(f"Opened {path}")
+            print(f"Opened {path}, image size: {img.size}")
             results.append((record, model.encode_image(img)))
             print(f"Successfully encoded {path}")
     return results
@@ -48,6 +48,7 @@ def sanity_check_model(model: Model, sizes: tuple[tuple[int, int], ...] = ((224,
     #all tuple(out.shape) should have same size, therefore there should be only one entry in the set
     if len(set(single_shapes)) != 1:
         raise RuntimeError(f"Sanity check failed: output shape depends on input size: {single_shapes}")
+    #batch of images passed to the model must have same dimension, check underlying encoder for errors
     batch_out = model.encode_image(images)
     print(f"Sanity check: batch of {len(images)} -> output shape {tuple(batch_out.shape)}")
     expected = (len(images), *single_shapes[0][1:])
