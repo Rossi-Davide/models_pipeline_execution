@@ -147,3 +147,23 @@ class DINOv3Backend(Backend):
     def encode_image(self, images: ImageInput) -> torch.Tensor:
         inputs = self._to_device(self.processor(images=_as_list(images), return_tensors="pt"))
         return self.model(**inputs).last_hidden_state.mean(dim=1)  # mean over CLS, register and patch tokens -> (B, D)
+
+
+@register("dinov3_only_CLS")
+class DINOv3Backend(Backend):
+    default_checkpoint = "facebook/dinov3-vith16plus-pretrain-lvd1689m"
+
+    def load(self) -> None:
+        from transformers import AutoImageProcessor, AutoModel
+
+        self.processor = AutoImageProcessor.from_pretrained(self.checkpoint)
+        self.model = AutoModel.from_pretrained(self.checkpoint, torch_dtype=self.dtype).to(self.device).eval()
+        print(f"[DINOv3Backend] device={next(self.model.parameters()).device}, dtype={next(self.model.parameters()).dtype}, training={self.model.training}")
+        print(f"[DINOv3Backend] params={sum(p.numel() for p in self.model.parameters()):,}")
+        last_name, last_param = list(self.model.named_parameters())[-1]
+        print(f"[DINOv3Backend] last layer param: {last_name} shape={tuple(last_param.shape)}")
+
+    @torch.inference_mode()
+    def encode_image(self, images: ImageInput) -> torch.Tensor:
+        inputs = self._to_device(self.processor(images=_as_list(images), return_tensors="pt"))
+        return self.model(**inputs).pooler_output  # output only CLS (pooled output), shape (B,D)
